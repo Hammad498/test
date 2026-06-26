@@ -60,225 +60,149 @@
 </html> -->
 
 
-
 <!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AI Coach Test Widget</title>
+  <title>AI Coach - Identity Handoff Test</title>
   <style>
-    :root {
-      --primary: #111827;
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --success: #10b981;
-    }
+    :root { --primary: #111827; --bg: #f9fafb; --card: #ffffff; --success: #10b981; --border: #e5e7eb; }
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      padding: 16px;
+      font-family: system-ui, sans-serif;
       background: var(--bg);
-      color: var(--text);
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 16px;
       min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .box {
       background: var(--card);
       border-radius: 16px;
-      padding: 24px;
+      padding: 28px;
       width: 100%;
-      max-width: 500px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      max-width: 520px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       border: 1px solid var(--border);
     }
-    h2 { margin-top: 0; font-size: 1.35rem; font-weight: 700; }
-    p { font-size: 0.95rem; line-height: 1.5; color: var(--muted); }
-    .telemetry, .debug-panel {
-      background: #f3f4f6;
-      padding: 12px;
+    h2 { margin: 0 0 8px 0; }
+    .status { padding: 10px; border-radius: 8px; margin: 12px 0; font-size: 0.9rem; }
+    button {
+      padding: 14px;
+      margin: 6px 0;
+      width: 100%;
+      border: none;
       border-radius: 8px;
-      font-family: monospace;
-      font-size: 0.85rem;
-      margin: 12px 0;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-    label { font-size: 0.9rem; font-weight: 600; }
-    input[type="email"] { 
-      padding: 12px; 
-      border-radius: 8px; 
-      border: 1px solid var(--border); 
-      font-size: 1rem; 
-      width: 100%; 
+    .identity-card {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 16px;
+      border-radius: 12px;
+      margin: 16px 0;
+      display: none;
     }
-    button { 
-      padding: 12px 16px; 
-      border-radius: 8px; 
-      border: none; 
-      background: var(--primary); 
-      color: white; 
-      font-weight: 600; 
-      font-size: 0.95rem; 
-      cursor: pointer; 
-      width: 100%; 
-      margin-top: 8px;
-    }
-    .identity-card { 
-      background: #ecfdf5; 
-      border: 1px solid #a7f3d0; 
-      color: #065f46; 
-      padding: 14px; 
-      border-radius: 8px; 
-      margin: 16px 0; 
-      display: none; 
-    }
-    .loading { display: none; text-align: center; color: var(--muted); margin: 10px 0; }
-    .tier-badge { display: inline-block; padding: 2px 8px; background: #10b981; color: white; border-radius: 9999px; font-size: 0.8rem; }
   </style>
 </head>
 <body>
   <div class="box">
-    <h2>AI Coach Test Widget</h2>
-    <p>This chatbot shell handles Circle user validation + identity handoff testing.</p>
+    <h2>AI Coach Identity Handoff Test</h2>
+    <p><strong>Testing Signed Token + Magic Link on Circle Professional Plan</strong></p>
+
+    <div class="status" id="embedInfo"></div>
 
     <div class="identity-card" id="identityCard">
-      ✅ Connected: <strong id="identityName">None</strong><br>
-      <span id="tierBadge" class="tier-badge"></span>
+      <strong>✅ Authenticated:</strong> <span id="name"></span><br>
+      <strong>Tier:</strong> <span id="tier"></span><br>
+      <strong>Email:</strong> <span id="email"></span>
     </div>
 
-    <div class="telemetry">
-      <div><strong>Embed:</strong> <span id="embedStatus">Detecting...</span></div>
-      <div><strong>Referrer:</strong> <span id="referrer">Detecting...</span></div>
+    <div id="testPanel">
+      <button onclick="generateAndTest('10K')">Test Signed Token (10K)</button>
+      <button onclick="generateAndTest('30K')">Test Signed Token (30K)</button>
+      <button onclick="generateAndTest('shared')">Test Signed Token (Shared)</button>
+      <button onclick="testMagicLink()">Test Magic Link</button>
     </div>
 
-    <!-- Debug / Test Panel -->
-    <div class="debug-panel" id="debugPanel">
-      <strong>🔧 Token Test Panel</strong><br>
-      <button onclick="simulateToken('10K')">Test 10K User</button>
-      <button onclick="simulateToken('30K')">Test 30K User</button>
-      <button onclick="simulateToken('shared')">Test Shared User</button>
-    </div>
-
-    <!-- Auth Zone -->
-    <div id="authZone">
-      <div class="input-group">
-        <label for="userEmail">Enter Circle Email (fallback):</label>
-        <input type="email" id="userEmail" placeholder="you@domain.com">
-      </div>
-      <div id="loading" class="loading">Verifying...</div>
-      <button onclick="handleEmailVerification()">Verify Identity & Start</button>
-    </div>
-
-    <!-- Chat Zone -->
-    <div id="chatZone" style="display:none;">
-      <p style="color: green; font-weight: bold;">✅ RAG Engine Connected</p>
-      <button onclick="alert('RAG Bot session started with personalized context!')">Interact with AI Coach</button>
-      <p style="text-align:center; margin-top:12px;">
-        <a href="#" onclick="logoutIdentity(); return false;">Reset Session</a>
-      </p>
+    <div style="margin-top:20px; font-size:0.85rem; color:#666;">
+      <strong>Instructions:</strong> Click buttons → iframe should auto-authenticate.
     </div>
   </div>
 
   <script>
-    document.getElementById("embedStatus").innerText = window.self !== window.top ? "Running inside iframe" : "Opened directly";
-    document.getElementById("referrer").innerText = document.referrer || "None";
+    // Show embed info
+    document.getElementById("embedInfo").innerHTML = `
+      Embed: <strong>${window.self !== window.top ? '✅ Inside iframe' : 'Direct'}</strong><br>
+      Referrer: ${document.referrer ? document.referrer.substring(0, 60)+'...' : 'None'}
+    `;
 
-    // Improved fake token verification for testing
-    function verifyToken(token) {
+    function decodeToken(token) {
       try {
-        const decoded = JSON.parse(atob(token));
-        if (decoded.exp && decoded.exp < Date.now()) {
-          return { verified: false, error: "Token expired" };
-        }
-        return { verified: true, ...decoded };
+        const base64Url = token.split('.')[1] || token;
+        const payload = JSON.parse(atob(base64Url.replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.exp * 1000 < Date.now()) return { verified: false, error: "Expired" };
+        return { verified: true, ...payload };
       } catch (e) {
-        return { verified: false, error: "Invalid token format" };
+        return { verified: false, error: "Decode failed" };
       }
     }
 
-    // Auto-detect token on load
+    async function generateAndTest(tier) {
+      const payload = {
+        name: "Hammad Test User",
+        email: "hammadabrar498@gmail.com",
+        tier: tier,
+        iat: Math.floor(Date.now()/1000),
+        exp: Math.floor(Date.now()/1000) + 3600
+      };
+
+      // Simulate real JWT (base64 for testing)
+      const token = btoa(JSON.stringify(payload));
+      const url = `${window.location.origin}${window.location.pathname}?token=${token}`;
+
+      window.history.replaceState({}, '', url);
+      location.reload();
+    }
+
+    function testMagicLink() {
+      const magic = "magic_" + Math.random().toString(36).substring(2,12);
+      const url = `${window.location.origin}${window.location.pathname}?magic=${magic}`;
+      window.history.replaceState({}, '', url);
+      location.reload();
+    }
+
+    // Auto handle token on load
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const token = params.get('token');
       const magic = params.get('magic');
 
       if (token || magic) {
-        document.getElementById("loading").style.display = "block";
-        
-        setTimeout(() => {
-          let data;
-          if (token) {
-            data = verifyToken(token);
-          } else if (magic) {
-            data = { verified: true, name: "Magic User", email: "user@example.com", tier: "10K" };
-          }
+        let data;
+        if (token) {
+          data = decodeToken(token);
+        } else {
+          data = { verified: true, name: "Magic Link User", email: "user@example.com", tier: "10K" };
+        }
 
-          document.getElementById("loading").style.display = "none";
-
-          if (data.verified) {
-            showAuthenticatedState(data.name || data.email, data.tier);
-            localStorage.setItem('circle_user_identity', data.name || data.email);
-          } else {
-            alert("Token verification failed: " + (data.error || "Unknown error"));
-          }
-        }, 600);
-      } else {
-        const saved = localStorage.getItem('circle_user_identity');
-        if (saved) showAuthenticatedState(saved);
+        if (data.verified) {
+          document.getElementById("identityCard").style.display = "block";
+          document.getElementById("name").textContent = data.name;
+          document.getElementById("tier").textContent = data.tier;
+          document.getElementById("email").textContent = data.email;
+          document.getElementById("testPanel").style.display = "none";
+        } else {
+          alert("Verification failed: " + data.error);
+        }
       }
     });
-
-    function simulateToken(tier) {
-      const payload = {
-        name: "Hammad Test",
-        email: "hammadabrar498@gmail.com",
-        tier: tier,
-        exp: Date.now() + 3600000 // 1 hour
-      };
-      
-      const fakeToken = btoa(JSON.stringify(payload)); // Simple base64 for testing
-      const newUrl = `${window.location.origin}${window.location.pathname}?token=${fakeToken}`;
-      
-      window.history.replaceState({}, '', newUrl);
-      location.reload(); // Trigger auto verification
-    }
-
-    function handleEmailVerification() {
-      const email = document.getElementById("userEmail").value.trim();
-      if (!email) return alert("Enter an email");
-      
-      document.getElementById("loading").style.display = "block";
-      setTimeout(() => {
-        document.getElementById("loading").style.display = "none";
-        showAuthenticatedState(email.split('@')[0], "shared");
-      }, 600);
-    }
-
-    function showAuthenticatedState(name, tier = '') {
-      document.getElementById("authZone").style.display = "none";
-      document.getElementById("chatZone").style.display = "block";
-      document.getElementById("identityCard").style.display = "block";
-      document.getElementById("identityName").innerText = name;
-      
-      const badge = document.getElementById("tierBadge");
-      if (tier) {
-        badge.textContent = tier.toUpperCase();
-        badge.style.display = "inline-block";
-      } else {
-        badge.style.display = "none";
-      }
-    }
-
-    function logoutIdentity() {
-      localStorage.removeItem('circle_user_identity');
-      location.reload();
-    }
   </script>
 </body>
 </html>
