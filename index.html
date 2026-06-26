@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html>
 <head>
   <title>Stage 2 AI Coach Test</title>
@@ -55,6 +55,227 @@
 
     document.getElementById("magic").innerText =
       params.get("magic_token") || "None";
+  </script>
+</body>
+</html> -->
+
+
+
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI Coach Test Widget</title>
+  <style>
+    :root {
+      --primary: #111827;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .box {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    h2 { margin-top: 0; font-size: 1.35rem; font-weight: 700; }
+    p { font-size: 0.95rem; line-height: 1.5; color: var(--muted); }
+    .telemetry, .debug-panel {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      margin: 12px 0;
+    }
+    .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    label { font-size: 0.9rem; font-weight: 600; }
+    input[type="email"] { 
+      padding: 12px; 
+      border-radius: 8px; 
+      border: 1px solid var(--border); 
+      font-size: 1rem; 
+      width: 100%; 
+    }
+    button { 
+      padding: 12px 16px; 
+      border-radius: 8px; 
+      border: none; 
+      background: var(--primary); 
+      color: white; 
+      font-weight: 600; 
+      font-size: 0.95rem; 
+      cursor: pointer; 
+      width: 100%; 
+      margin-top: 8px;
+    }
+    .identity-card { 
+      background: #ecfdf5; 
+      border: 1px solid #a7f3d0; 
+      color: #065f46; 
+      padding: 14px; 
+      border-radius: 8px; 
+      margin: 16px 0; 
+      display: none; 
+    }
+    .loading { display: none; text-align: center; color: var(--muted); margin: 10px 0; }
+    .tier-badge { display: inline-block; padding: 2px 8px; background: #10b981; color: white; border-radius: 9999px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>AI Coach Test Widget</h2>
+    <p>This chatbot shell handles Circle user validation + identity handoff testing.</p>
+
+    <div class="identity-card" id="identityCard">
+      ✅ Connected: <strong id="identityName">None</strong><br>
+      <span id="tierBadge" class="tier-badge"></span>
+    </div>
+
+    <div class="telemetry">
+      <div><strong>Embed:</strong> <span id="embedStatus">Detecting...</span></div>
+      <div><strong>Referrer:</strong> <span id="referrer">Detecting...</span></div>
+    </div>
+
+    <!-- Debug / Test Panel -->
+    <div class="debug-panel" id="debugPanel">
+      <strong>🔧 Token Test Panel</strong><br>
+      <button onclick="simulateToken('10K')">Test 10K User</button>
+      <button onclick="simulateToken('30K')">Test 30K User</button>
+      <button onclick="simulateToken('shared')">Test Shared User</button>
+    </div>
+
+    <!-- Auth Zone -->
+    <div id="authZone">
+      <div class="input-group">
+        <label for="userEmail">Enter Circle Email (fallback):</label>
+        <input type="email" id="userEmail" placeholder="you@domain.com">
+      </div>
+      <div id="loading" class="loading">Verifying...</div>
+      <button onclick="handleEmailVerification()">Verify Identity & Start</button>
+    </div>
+
+    <!-- Chat Zone -->
+    <div id="chatZone" style="display:none;">
+      <p style="color: green; font-weight: bold;">✅ RAG Engine Connected</p>
+      <button onclick="alert('RAG Bot session started with personalized context!')">Interact with AI Coach</button>
+      <p style="text-align:center; margin-top:12px;">
+        <a href="#" onclick="logoutIdentity(); return false;">Reset Session</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Telemetry
+    document.getElementById("embedStatus").innerText = window.self !== window.top ? "Running inside iframe" : "Opened directly";
+    document.getElementById("referrer").innerText = document.referrer || "None";
+
+    // Simulate JWT verification (for testing only)
+    function verifyToken(token) {
+      try {
+        // Simple base64 decode simulation
+        const payload = JSON.parse(atob(token.split('.')[1] || '{}'));
+        return { verified: true, ...payload };
+      } catch (e) {
+        return { verified: false, error: "Invalid token" };
+      }
+    }
+
+    // Auto-detect token on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const magic = params.get('magic');
+
+      if (token || magic) {
+        document.getElementById("loading").style.display = "block";
+        
+        setTimeout(() => {  // Simulate network delay
+          let data;
+          if (token) {
+            data = verifyToken(token);
+          } else {
+            data = { verified: true, name: "Magic User", email: "user@example.com", tier: "10K" };
+          }
+
+          document.getElementById("loading").style.display = "none";
+
+          if (data.verified) {
+            showAuthenticatedState(data.name || data.email, data.tier);
+            localStorage.setItem('circle_user_identity', data.name || data.email);
+          } else {
+            alert("Token verification failed");
+          }
+        }, 800);
+      } else {
+        const saved = localStorage.getItem('circle_user_identity');
+        if (saved) showAuthenticatedState(saved);
+      }
+    });
+
+    function simulateToken(tier) {
+      const fakeToken = btoa(JSON.stringify({
+        name: "Hammad Test",
+        email: "hammadabrar498@gmail.com",
+        tier: tier,
+        exp: Date.now() + 3600000
+      }));
+      
+      const newUrl = `${window.location.origin}${window.location.pathname}?token=${fakeToken}`;
+      window.history.replaceState({}, '', newUrl);
+      location.reload(); // Reload to trigger auto-detect
+    }
+
+    function handleEmailVerification() {
+      const email = document.getElementById("userEmail").value.trim();
+      if (!email) return alert("Enter an email");
+      
+      document.getElementById("loading").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("loading").style.display = "none";
+        showAuthenticatedState(email.split('@')[0], "shared");
+        localStorage.setItem('circle_user_identity', email.split('@')[0]);
+      }, 600);
+    }
+
+    function showAuthenticatedState(name, tier = '') {
+      document.getElementById("authZone").style.display = "none";
+      document.getElementById("chatZone").style.display = "block";
+      document.getElementById("identityCard").style.display = "block";
+      document.getElementById("identityName").innerText = name;
+      
+      const badge = document.getElementById("tierBadge");
+      if (tier) {
+        badge.textContent = tier.toUpperCase();
+        badge.style.display = "inline-block";
+      }
+    }
+
+    function logoutIdentity() {
+      localStorage.removeItem('circle_user_identity');
+      location.reload();
+    }
   </script>
 </body>
 </html>
