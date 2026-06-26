@@ -61,7 +61,6 @@
 
 
 
-
 <!doctype html>
 <html>
 <head>
@@ -187,18 +186,19 @@
   </div>
 
   <script>
-    // Telemetry
     document.getElementById("embedStatus").innerText = window.self !== window.top ? "Running inside iframe" : "Opened directly";
     document.getElementById("referrer").innerText = document.referrer || "None";
 
-    // Simulate JWT verification (for testing only)
+    // Improved fake token verification for testing
     function verifyToken(token) {
       try {
-        // Simple base64 decode simulation
-        const payload = JSON.parse(atob(token.split('.')[1] || '{}'));
-        return { verified: true, ...payload };
+        const decoded = JSON.parse(atob(token));
+        if (decoded.exp && decoded.exp < Date.now()) {
+          return { verified: false, error: "Token expired" };
+        }
+        return { verified: true, ...decoded };
       } catch (e) {
-        return { verified: false, error: "Invalid token" };
+        return { verified: false, error: "Invalid token format" };
       }
     }
 
@@ -211,11 +211,11 @@
       if (token || magic) {
         document.getElementById("loading").style.display = "block";
         
-        setTimeout(() => {  // Simulate network delay
+        setTimeout(() => {
           let data;
           if (token) {
             data = verifyToken(token);
-          } else {
+          } else if (magic) {
             data = { verified: true, name: "Magic User", email: "user@example.com", tier: "10K" };
           }
 
@@ -225,9 +225,9 @@
             showAuthenticatedState(data.name || data.email, data.tier);
             localStorage.setItem('circle_user_identity', data.name || data.email);
           } else {
-            alert("Token verification failed");
+            alert("Token verification failed: " + (data.error || "Unknown error"));
           }
-        }, 800);
+        }, 600);
       } else {
         const saved = localStorage.getItem('circle_user_identity');
         if (saved) showAuthenticatedState(saved);
@@ -235,16 +235,18 @@
     });
 
     function simulateToken(tier) {
-      const fakeToken = btoa(JSON.stringify({
+      const payload = {
         name: "Hammad Test",
         email: "hammadabrar498@gmail.com",
         tier: tier,
-        exp: Date.now() + 3600000
-      }));
+        exp: Date.now() + 3600000 // 1 hour
+      };
       
+      const fakeToken = btoa(JSON.stringify(payload)); // Simple base64 for testing
       const newUrl = `${window.location.origin}${window.location.pathname}?token=${fakeToken}`;
+      
       window.history.replaceState({}, '', newUrl);
-      location.reload(); // Reload to trigger auto-detect
+      location.reload(); // Trigger auto verification
     }
 
     function handleEmailVerification() {
@@ -255,7 +257,6 @@
       setTimeout(() => {
         document.getElementById("loading").style.display = "none";
         showAuthenticatedState(email.split('@')[0], "shared");
-        localStorage.setItem('circle_user_identity', email.split('@')[0]);
       }, 600);
     }
 
@@ -269,6 +270,8 @@
       if (tier) {
         badge.textContent = tier.toUpperCase();
         badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
       }
     }
 
