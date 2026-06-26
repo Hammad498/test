@@ -1,53 +1,201 @@
 <!doctype html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <!-- CRITICAL FOR MOBILE: Fixes responsive layout scaling inside native app views -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Stage 2 AI Coach Test</title>
   <style>
+    :root {
+      --primary: #111827;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #10b981;
+    }
+    
+    * { box-sizing: border-box; }
+    
     body {
-      font-family: Arial, sans-serif;
-      padding: 24px;
-      background: #f7f7f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
+    
     .box {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 600px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
     }
+    
+    h2 { margin-top: 0; font-size: 1.25rem; font-weight: 700; }
+    p { font-size: 0.9rem; line-height: 1.5; color: var(--muted); }
+    
+    .telemetry {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      margin: 16px 0;
+    }
+    .telemetry-item { margin-bottom: 6px; }
+    .telemetry-item strong { color: var(--text); }
+    
+    .auth-zone {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    label { font-size: 0.85rem; font-weight: 600; }
+    
+    input[type="email"] {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 1rem;
+      width: 100%;
+    }
+    
     button {
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-radius: 8px;
       border: none;
-      background: #111827;
+      background: var(--primary);
       color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    button:hover { background: #1f2937; }
+    
+    .identity-card {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      display: none;
     }
   </style>
 </head>
 <body>
+
   <div class="box">
     <h2>AI Coach Test Widget</h2>
-    <p>This is a custom hosted chatbot shell for Circle embed testing.</p>
+    <p>This is a custom hosted chatbot shell for Circle embed testing inside the mobile application sidebar layout.</p>
 
-    <p><strong>Embed status:</strong> <span id="embedStatus"></span></p>
-    <p><strong>Referrer:</strong> <span id="referrer"></span></p>
-    <p><strong>URL params:</strong> <span id="params"></span></p>
-    <p><strong>User identity received:</strong> <span id="identity">None detected</span></p>
+    
+    
+      ✓ Connected User: None</span>
+    </div>
 
-    <button onclick="alert('Hello from future custom RAG bot')">
-      Test Chat Button
-    </button>
+    <!-- Live Environment Telemetry Dashboard -->
+    <div class="telemetry">
+      <div class="telemetry-item"><strong>Embed status:</strong> <span id="embedStatus">Detecting...</span></div>
+      <div class="telemetry-item"><strong>Referrer:</strong> <span id="referrer">Detecting...</span></div>
+      <div class="telemetry-item"><strong>URL params:</strong> <span id="params">Detecting...</span></div>
+    </div>
+
+    <!-- Handoff & Authorization Workaround View -->
+    <div class="auth-zone" id="authZone">
+      <div class="input-group">
+        <label for="userEmail">Enter your Circle Community Email to initialize RAG memory:</label>
+        <input type="email" id="userEmail" placeholder="you@domain.com" required>
+      </div>
+      Verify Identity & Start</button>
+    </div>
+
+    <!-- Active RAG Action View -->
+    <div class="auth-zone" id="chatZone" style="display:none;">
+      <p style="color: green; font-weight: bold;">RAG Engine Ready for Active Session.</p>
+      <button onclick="alert('RAG Session verified. Logged user history mapping successfully de-risked!')">
+        Interact with Custom RAG Bot
+      </button>
+      <p style="text-align: center; margin-top: 12px; margin-bottom: 0;">
+        Reset Verification Profile</a>
+      </p>
+    </div>
   </div>
 
   <script>
+    // 1. Core Platform Telemetry Calculations
     document.getElementById("embedStatus").innerText =
-      window.self !== window.top ? "Running inside iframe" : "Opened directly";
+      window.self !== window.top ? "Running inside iframe / webview" : "Opened directly";
 
     document.getElementById("referrer").innerText =
-      document.referrer || "No referrer";
+      document.referrer || "No native referrer header passed";
 
     document.getElementById("params").innerText =
-      window.location.search || "No URL params";
+      window.location.search || "No explicit URL token variables present";
+
+    // 2. Local State Session Persistence Engine
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('circle_user_identity');
+      if (savedUser) {
+        showAuthenticatedState(savedUser);
+      }
+    });
+
+    // 3. Simulated Verification Handoff (The Staging Protocol)
+    function handleIdentityVerification() {
+      const email = document.getElementById("userEmail").value.trim();
+      if (!email || !email.includes('@')) {
+        alert("Please provide a valid, structured email parameter.");
+        return;
+      }
+
+      // PRODUCTION ARCHITECTURE NOTE:
+      // In production, your Vercel code will fetch('https://vercel.app' + email)
+      // Where your server code references Circle's Admin token via "https://circle.so" sync loop.
+      
+      // For immediate staging validation:
+      localStorage.setItem('circle_user_identity', email);
+      showAuthenticatedState(email);
+    }
+
+    function showAuthenticatedState(emailValue) {
+      document.getElementById("authZone").style.display = "none";
+      document.getElementById("chatZone").style.display = "block";
+      
+      const identityCard = document.getElementById("identityCard");
+      const identityName = document.getElementById("identityName");
+      
+      identityName.innerText = emailValue;
+      identityCard.style.display = "block";
+    }
+
+    function logoutIdentity() {
+      localStorage.removeItem('circle_user_identity');
+      document.getElementById("authZone").style.display = "block";
+      document.getElementById("chatZone").style.display = "none";
+      document.getElementById("identityCard").style.display = "none";
+    }
   </script>
 </body>
 </html>
