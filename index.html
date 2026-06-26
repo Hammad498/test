@@ -1,187 +1,53 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AI Coach Test</title>
+  <title>Stage 2 AI Coach Test</title>
   <style>
-    :root {
-      --primary: #111827;
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --success: #10b981;
-    }
-    * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      padding: 16px;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      background: #f7f7f7;
     }
     .box {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 600px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
-    h2 { margin-top: 0; font-size: 1.25rem; font-weight: 700; }
-    p { font-size: 0.9rem; line-height: 1.5; color: var(--muted); }
-    .telemetry {
-      background: #f3f4f6;
-      padding: 12px;
+    button {
+      padding: 10px 14px;
       border-radius: 8px;
-      font-family: monospace;
-      font-size: 0.8rem;
-      margin: 16px 0;
-    }
-    .auth-zone { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
-    .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-    label { font-size: 0.85rem; font-weight: 600; }
-    input[type="email"] { 
-      padding: 12px; 
-      border-radius: 8px; 
-      border: 1px solid var(--border); 
-      font-size: 1rem; 
-      width: 100%; 
-    }
-    button { 
-      padding: 12px 16px; 
-      border-radius: 8px; 
-      border: none; 
-      background: var(--primary); 
-      color: white; 
-      font-weight: 600; 
-      font-size: 0.95rem; 
-      cursor: pointer; 
-      width: 100%; 
-    }
-    button:disabled { opacity: 0.7; cursor: not-allowed; }
-    .identity-card { 
-      background: #ecfdf5; 
-      border: 1px solid #a7f3d0; 
-      color: #065f46; 
-      padding: 12px; 
-      border-radius: 8px; 
-      font-size: 0.9rem; 
-      margin: 16px 0; 
-      display: none; 
-    }
-    .loading-spinner { 
-      display: none; 
-      text-align: center; 
-      color: var(--muted); 
-      margin: 10px 0; 
-      font-size: 0.85rem; 
+      border: none;
+      background: #111827;
+      color: white;
     }
   </style>
 </head>
 <body>
   <div class="box">
     <h2>AI Coach Test Widget</h2>
-    <p>This chatbot shell handles Circle user validation.</p>
+    <p>This is a custom hosted chatbot shell for Circle embed testing.</p>
 
-    <div class="identity-card" id="identityCard">
-      ✓ Connected User: <strong id="identityName">None</strong>
-    </div>
+    <p><strong>Embed status:</strong> <span id="embedStatus"></span></p>
+    <p><strong>Referrer:</strong> <span id="referrer"></span></p>
+    <p><strong>URL params:</strong> <span id="params"></span></p>
+    <p><strong>User identity received:</strong> <span id="identity">None detected</span></p>
 
-    <div class="telemetry">
-      <div class="telemetry-item"><strong>Embed status:</strong> <span id="embedStatus">Detecting...</span></div>
-      <div class="telemetry-item"><strong>Referrer:</strong> <span id="referrer">Detecting...</span></div>
-    </div>
-
-    <!-- Auth Zone -->
-    <div class="auth-zone" id="authZone">
-      <div class="input-group">
-        <label for="userEmail">Enter your Circle Community Email:</label>
-        <input type="email" id="userEmail" placeholder="you@domain.com" required>
-      </div>
-      <div id="loading" class="loading-spinner">Querying Circle directories...</div>
-      <button id="verifyBtn" onclick="handleIdentityVerification()">Verify Identity & Start</button>
-    </div>
-
-    <!-- Chat Zone -->
-    <div class="auth-zone" id="chatZone" style="display:none;">
-      <p style="color: green; font-weight: bold;">✅ RAG Engine Connected and Ready.</p>
-      <button onclick="alert('RAG Bot session confirmed. User history mapping validated successfully!')">
-        Interact with Custom RAG Bot
-      </button>
-      <p style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="logoutIdentity(); return false;" style="color: #6b7280;">Reset Verification Profile</a>
-      </p>
-    </div>
+    <button onclick="alert('Hello from future custom RAG bot')">
+      Test Chat Button
+    </button>
   </div>
 
   <script>
-    // Telemetry
-    document.getElementById("embedStatus").innerText = window.self !== window.top ? "Running inside iframe" : "Opened directly";
-    document.getElementById("referrer").innerText = document.referrer || "No referrer";
+    document.getElementById("embedStatus").innerText =
+      window.self !== window.top ? "Running inside iframe" : "Opened directly";
 
-    // Load saved session
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedUser = localStorage.getItem('circle_user_identity');
-      if (savedUser) {
-        showAuthenticatedState(savedUser);
-      }
-    });
+    document.getElementById("referrer").innerText =
+      document.referrer || "No referrer";
 
-    function handleIdentityVerification() {
-      const email = document.getElementById("userEmail").value.trim();
-      const verifyBtn = document.getElementById("verifyBtn");
-      const loading = document.getElementById("loading");
-
-      if (!email || !email.includes('@')) {
-        alert("Please enter a valid email address.");
-        return;
-      }
-
-      verifyBtn.disabled = true;
-      loading.style.display = "block";
-
-      fetch(`/api/verify-member?email=${encodeURIComponent(email)}`)
-        .then(res => res.json())
-        .then(data => {
-          verifyBtn.disabled = false;
-          loading.style.display = "none";
-
-          if (data.verified) {
-            localStorage.setItem('circle_user_identity', data.name);
-            showAuthenticatedState(data.name);
-          } else {
-            alert("Verification failed: " + (data.error || "Email not found."));
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          verifyBtn.disabled = false;
-          loading.style.display = "none";
-          alert("Error contacting verification service.");
-        });
-    }
-
-    function showAuthenticatedState(nameValue) {
-      document.getElementById("authZone").style.display = "none";
-      document.getElementById("chatZone").style.display = "block";
-      document.getElementById("identityCard").style.display = "block";
-      document.getElementById("identityName").innerText = nameValue;
-    }
-
-    function logoutIdentity() {
-      localStorage.removeItem('circle_user_identity');
-      document.getElementById("authZone").style.display = "block";
-      document.getElementById("chatZone").style.display = "none";
-      document.getElementById("identityCard").style.display = "none";
-    }
+    document.getElementById("params").innerText =
+      window.location.search || "No URL params";
   </script>
 </body>
 </html>
