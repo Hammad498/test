@@ -1,207 +1,449 @@
-<!-- <!doctype html>
-<html>
-<head>
-  <title>Stage 2 AI Coach Test</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 24px; background: #f7f7f7; }
-    .box { background: white; border-radius: 12px; padding: 20px; max-width: 650px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-    button { padding: 10px 14px; border-radius: 8px; border: none; background: #111827; color: white; }
-    code { word-break: break-all; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h2>AI Coach Test Widget</h2>
-    <p>This is a custom hosted chatbot shell for Circle embed testing.</p>
-
-    <p><strong>Embed status:</strong> <span id="embedStatus"></span></p>
-    <p><strong>Referrer:</strong> <span id="referrer"></span></p>
-    <p><strong>Raw URL params:</strong> <code id="params"></code></p>
-
-    <p><strong>Name:</strong> <span id="name">None</span></p>
-    <p><strong>Email:</strong> <span id="email">None</span></p>
-    <p><strong>Tier:</strong> <span id="tier">None</span></p>
-    <p><strong>Signed token:</strong> <code id="token">None</code></p>
-    <p><strong>Magic token:</strong> <code id="magic">None</code></p>
-
-    <button onclick="alert('Hello from future custom RAG bot')">
-      Test Chat Button
-    </button>
-  </div>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-
-    document.getElementById("embedStatus").innerText =
-      window.self !== window.top ? "Running inside iframe" : "Opened directly";
-
-    document.getElementById("referrer").innerText =
-      document.referrer || "No referrer";
-
-    document.getElementById("params").innerText =
-      window.location.search || "No URL params";
-
-    document.getElementById("name").innerText =
-      params.get("name") || "None";
-
-    document.getElementById("email").innerText =
-      params.get("email") || "None";
-
-    document.getElementById("tier").innerText =
-      params.get("tier") || "None";
-
-    document.getElementById("token").innerText =
-      params.get("token") || "None";
-
-    document.getElementById("magic").innerText =
-      params.get("magic_token") || "None";
-  </script>
-</body>
-</html> -->
-
-
-<!doctype html>
-<html>
+﻿<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AI Coach - Identity Handoff Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circle AI Coach Identity Handoff Test</title>
   <style>
-    :root { --primary: #111827; --bg: #f9fafb; --card: #ffffff; --success: #10b981; --border: #e5e7eb; }
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #d9dee7;
+      --soft: #eef2f7;
+      --good: #0f766e;
+      --bad: #b42318;
+      --warn: #9a6700;
+      --primary: #111827;
+    }
+
     * { box-sizing: border-box; }
+
     body {
-      font-family: system-ui, sans-serif;
-      background: var(--bg);
       margin: 0;
-      padding: 16px;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      padding: 18px;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
     }
-    .box {
+
+    main {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .hero,
+    .panel {
       background: var(--card);
-      border-radius: 16px;
-      padding: 28px;
-      width: 100%;
-      max-width: 520px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
     }
-    h2 { margin: 0 0 8px 0; }
-    .status { padding: 10px; border-radius: 8px; margin: 12px 0; font-size: 0.9rem; }
-    button {
-      padding: 14px;
-      margin: 6px 0;
-      width: 100%;
-      border: none;
+
+    h1, h2, h3 { margin: 0 0 10px; }
+    p { line-height: 1.45; }
+    code, pre { word-break: break-word; white-space: pre-wrap; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--soft);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ok { color: var(--good); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+
+    button,
+    input,
+    select {
+      font: inherit;
       border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+    }
+
+    button {
+      border: 0;
       background: var(--primary);
       color: white;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
     }
-    .identity-card {
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      padding: 16px;
-      border-radius: 12px;
-      margin: 16px 0;
-      display: none;
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    input, select {
+      width: 100%;
+      background: white;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .result {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .doc {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 8px 0;
+      background: white;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 720px) {
+      body { padding: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      .hero, .panel { padding: 14px; }
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>AI Coach Identity Handoff Test</h2>
-    <p><strong>Testing Signed Token + Magic Link on Circle Professional Plan</strong></p>
+  <main>
+    <section class="hero">
+      <h1>Circle AI Coach Identity Handoff Test</h1>
+      <p>This page tests how a future RAG bot can be opened inside Circle and how user/tier identity can be handed to our app.</p>
+      <div class="row">
+        <span class="pill" id="embedStatus">Embed: checking</span>
+        <span class="pill" id="referrerStatus">Referrer: checking</span>
+      </div>
+    </section>
 
-    <div class="status" id="embedInfo"></div>
+    <section class="panel">
+      <h2>Current Request</h2>
+      <div id="requestFacts" class="result"></div>
+    </section>
 
-    <div class="identity-card" id="identityCard">
-      <strong>✅ Authenticated:</strong> <span id="name"></span><br>
-      <strong>Tier:</strong> <span id="tier"></span><br>
-      <strong>Email:</strong> <span id="email"></span>
-    </div>
+    <section class="panel">
+      <h2>Detected Identity</h2>
+      <div id="identityResult" class="result"></div>
+      <p class="warn"><strong>Production note:</strong> raw email/tier URL params are not safe. Use a server-generated signed token or magic token.</p>
+    </section>
 
-    <div id="testPanel">
-      <button onclick="generateAndTest('10K')">Test Signed Token (10K)</button>
-      <button onclick="generateAndTest('30K')">Test Signed Token (30K)</button>
-      <button onclick="generateAndTest('shared')">Test Signed Token (Shared)</button>
-      <button onclick="testMagicLink()">Test Magic Link</button>
-    </div>
+    <section class="panel">
+      <h2>Generate Test URLs</h2>
+      <div class="grid">
+        <div>
+          <label for="tierSelect">Tier</label>
+          <select id="tierSelect">
+            <option value="10K">10K</option>
+            <option value="30K">30K</option>
+            <option value="Alum">Alum</option>
+          </select>
+        </div>
+        <div>
+          <label for="emailInput">Email</label>
+          <input id="emailInput" value="test10k@example.com">
+        </div>
+      </div>
+      <label for="nameInput">Name</label>
+      <input id="nameInput" value="Test 10K User">
+      <div class="row" style="margin-top:12px;">
+        <button onclick="setPlainUrl()">Plain iframe</button>
+        <button onclick="setRawParamsUrl()">Raw params</button>
+        <button onclick="setSignedTokenUrl()">Signed token</button>
+        <button onclick="setMagicTokenUrl()">Magic token</button>
+      </div>
+      <div class="result">
+        <strong>Generated URL:</strong>
+        <pre id="generatedUrl">Click a button above.</pre>
+        <button class="secondary" onclick="copyGeneratedUrl()">Copy URL</button>
+      </div>
+    </section>
 
-    <div style="margin-top:20px; font-size:0.85rem; color:#666;">
-      <strong>Instructions:</strong> Click buttons → iframe should auto-authenticate.
-    </div>
-  </div>
+    <section class="panel">
+      <h2>Custom User Mapping Test</h2>
+      <p>This simulates a fallback where the user logs into the bot or enters an email, then our backend maps that email to a tier.</p>
+      <label for="mappingEmail">Lookup email</label>
+      <input id="mappingEmail" value="test10k@example.com">
+      <div class="row" style="margin-top:12px;">
+        <button onclick="runMappingLookup()">Lookup user</button>
+      </div>
+      <div id="mappingResult" class="result">No lookup yet.</div>
+    </section>
+
+    <section class="panel">
+      <h2>Tier-Filtered RAG Retrieval Demo</h2>
+      <p>This simulates the important production behavior: the bot is visible to all, but answers can only use documents allowed for the detected user/tier.</p>
+      <label for="questionInput">Question</label>
+      <input id="questionInput" value="What recordings and session links can I access?">
+      <div class="row" style="margin-top:12px;">
+        <button onclick="runRagDemo()">Run tier-filtered retrieval</button>
+      </div>
+      <div id="ragResult" class="result">No retrieval yet.</div>
+    </section>
+
+    <section class="panel">
+      <h2>What This Test Can Prove</h2>
+      <ul>
+        <li>Whether Circle opens this tool inside an iframe or app web view.</li>
+        <li>Whether Circle passes referrer and URL params.</li>
+        <li>Whether raw params, signed-token style URLs, and magic-link URLs are readable by the bot.</li>
+        <li>Whether a detected tier can filter dummy RAG content.</li>
+      </ul>
+      <h3>What This Static Page Cannot Prove Alone</h3>
+      <ul>
+        <li>A real production signed token requires server-side generation and verification.</li>
+        <li>Circle SSO requires OAuth provider setup and should not be enabled without CTO/client approval.</li>
+      </ul>
+    </section>
+  </main>
 
   <script>
-    // Show embed info
-    document.getElementById("embedInfo").innerHTML = `
-      Embed: <strong>${window.self !== window.top ? '✅ Inside iframe' : 'Direct'}</strong><br>
-      Referrer: ${document.referrer ? document.referrer.substring(0, 60)+'...' : 'None'}
-    `;
+    var demoSecret = "demo-secret-not-for-production";
+    var generatedUrl = "";
+    var detectedIdentity = null;
 
-    function decodeToken(token) {
-      try {
-        const base64Url = token.split('.')[1] || token;
-        const payload = JSON.parse(atob(base64Url.replace(/-/g, '+').replace(/_/g, '/')));
-        if (payload.exp * 1000 < Date.now()) return { verified: false, error: "Expired" };
-        return { verified: true, ...payload };
-      } catch (e) {
-        return { verified: false, error: "Decode failed" };
-      }
+    var magicTokenStore = {
+      "magic_10k_demo": { name: "Magic 10K User", email: "magic10k@example.com", tier: "10K" },
+      "magic_30k_demo": { name: "Magic 30K User", email: "magic30k@example.com", tier: "30K" },
+      "magic_alum_demo": { name: "Magic Alum User", email: "magicalum@example.com", tier: "Alum" }
+    };
+
+    var userMap = {
+      "test10k@example.com": { name: "Test 10K User", email: "test10k@example.com", tier: "10K" },
+      "test30k@example.com": { name: "Test 30K User", email: "test30k@example.com", tier: "30K" },
+      "alum@example.com": { name: "Test Alum User", email: "alum@example.com", tier: "Alum" }
+    };
+
+    var docs = [
+      { title: "Shared onboarding guide", audience: "shared", body: "Visible to all members." },
+      { title: "10K weekly session link", audience: "10K", body: "Visible only to 10K members." },
+      { title: "30K weekly session link", audience: "30K", body: "Visible only to 30K members." },
+      { title: "Alum weekly session link", audience: "Alum", body: "Visible only to Alum members." },
+      { title: "Private note for test10k@example.com", audience: "user:test10k@example.com", body: "Visible only to this exact user." }
+    ];
+
+    function base64UrlEncode(text) {
+      return btoa(text).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
     }
 
-    async function generateAndTest(tier) {
-      const payload = {
-        name: "Hammad Test User",
-        email: "hammadabrar498@gmail.com",
-        tier: tier,
-        iat: Math.floor(Date.now()/1000),
-        exp: Math.floor(Date.now()/1000) + 3600
+    function base64UrlDecode(text) {
+      text = text.replace(/-/g, "+").replace(/_/g, "/");
+      while (text.length % 4) text += "=";
+      return atob(text);
+    }
+
+    async function hmacSha256(message, secret) {
+      var enc = new TextEncoder();
+      var key = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      var sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
+      var bytes = new Uint8Array(sig);
+      var binary = "";
+      bytes.forEach(function (b) { binary += String.fromCharCode(b); });
+      return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+    }
+
+    async function createDemoJwt(payload) {
+      var header = { alg: "HS256", typ: "JWT", note: "demo only" };
+      var encodedHeader = base64UrlEncode(JSON.stringify(header));
+      var encodedPayload = base64UrlEncode(JSON.stringify(payload));
+      var signingInput = encodedHeader + "." + encodedPayload;
+      var signature = await hmacSha256(signingInput, demoSecret);
+      return signingInput + "." + signature;
+    }
+
+    async function verifyDemoJwt(token) {
+      var parts = token.split(".");
+      if (parts.length !== 3) return { ok: false, error: "Token must have three JWT parts" };
+      var signingInput = parts[0] + "." + parts[1];
+      var expected = await hmacSha256(signingInput, demoSecret);
+      if (expected !== parts[2]) return { ok: false, error: "Signature mismatch" };
+      var payload = JSON.parse(base64UrlDecode(parts[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) return { ok: false, error: "Token expired" };
+      return { ok: true, identity: payload };
+    }
+
+    function currentBaseUrl() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    function formIdentity() {
+      return {
+        name: document.getElementById("nameInput").value.trim(),
+        email: document.getElementById("emailInput").value.trim(),
+        tier: document.getElementById("tierSelect").value,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600
       };
-
-      // Simulate real JWT (base64 for testing)
-      const token = btoa(JSON.stringify(payload));
-      const url = `${window.location.origin}${window.location.pathname}?token=${token}`;
-
-      window.history.replaceState({}, '', url);
-      location.reload();
     }
 
-    function testMagicLink() {
-      const magic = "magic_" + Math.random().toString(36).substring(2,12);
-      const url = `${window.location.origin}${window.location.pathname}?magic=${magic}`;
-      window.history.replaceState({}, '', url);
-      location.reload();
+    function showGenerated(url) {
+      generatedUrl = url;
+      document.getElementById("generatedUrl").textContent = url;
     }
 
-    // Auto handle token on load
-    window.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get('token');
-      const magic = params.get('magic');
+    function setPlainUrl() {
+      showGenerated(currentBaseUrl());
+    }
 
-      if (token || magic) {
-        let data;
-        if (token) {
-          data = decodeToken(token);
-        } else {
-          data = { verified: true, name: "Magic Link User", email: "user@example.com", tier: "10K" };
-        }
+    function setRawParamsUrl() {
+      var id = formIdentity();
+      var params = new URLSearchParams({ name: id.name, email: id.email, tier: id.tier });
+      showGenerated(currentBaseUrl() + "?" + params.toString());
+    }
 
-        if (data.verified) {
-          document.getElementById("identityCard").style.display = "block";
-          document.getElementById("name").textContent = data.name;
-          document.getElementById("tier").textContent = data.tier;
-          document.getElementById("email").textContent = data.email;
-          document.getElementById("testPanel").style.display = "none";
-        } else {
-          alert("Verification failed: " + data.error);
+    async function setSignedTokenUrl() {
+      var token = await createDemoJwt(formIdentity());
+      showGenerated(currentBaseUrl() + "?token=" + encodeURIComponent(token));
+    }
+
+    function setMagicTokenUrl() {
+      var tier = document.getElementById("tierSelect").value;
+      var token = tier === "30K" ? "magic_30k_demo" : tier === "Alum" ? "magic_alum_demo" : "magic_10k_demo";
+      showGenerated(currentBaseUrl() + "?magic_token=" + encodeURIComponent(token));
+    }
+
+    async function copyGeneratedUrl() {
+      if (!generatedUrl) return;
+      await navigator.clipboard.writeText(generatedUrl);
+      alert("Copied test URL");
+    }
+
+    function renderRequestFacts() {
+      var params = new URLSearchParams(window.location.search);
+      document.getElementById("embedStatus").textContent = window.self !== window.top ? "Embed: inside iframe" : "Embed: direct or app web view";
+      document.getElementById("referrerStatus").textContent = document.referrer ? "Referrer: present" : "Referrer: none";
+      document.getElementById("requestFacts").innerHTML =
+        "<strong>Current URL params:</strong><br><code>" + (window.location.search || "No URL params") + "</code><br><br>" +
+        "<strong>Referrer:</strong><br><code>" + (document.referrer || "No referrer") + "</code><br><br>" +
+        "<strong>Token present:</strong> " + (params.has("token") ? "Yes" : "No") + "<br>" +
+        "<strong>Magic token present:</strong> " + (params.has("magic_token") ? "Yes" : "No");
+    }
+
+    async function detectIdentity() {
+      var params = new URLSearchParams(window.location.search);
+      var rawName = params.get("name");
+      var rawEmail = params.get("email");
+      var rawTier = params.get("tier");
+      var token = params.get("token");
+      var magic = params.get("magic_token");
+
+      if (token) {
+        var verified = await verifyDemoJwt(token);
+        if (verified.ok) {
+          detectedIdentity = verified.identity;
+          return { method: "signed token", status: "verified", identity: detectedIdentity };
         }
+        return { method: "signed token", status: "failed", error: verified.error };
       }
+
+      if (magic) {
+        if (magicTokenStore[magic]) {
+          detectedIdentity = magicTokenStore[magic];
+          return { method: "magic token", status: "mapped", identity: detectedIdentity };
+        }
+        return { method: "magic token", status: "failed", error: "Unknown magic token" };
+      }
+
+      if (rawName || rawEmail || rawTier) {
+        detectedIdentity = { name: rawName || "Unknown", email: rawEmail || "unknown@example.com", tier: rawTier || "shared" };
+        return { method: "raw URL params", status: "read but unsafe", identity: detectedIdentity };
+      }
+
+      detectedIdentity = null;
+      return { method: "plain iframe", status: "no identity", identity: null };
+    }
+
+    function renderIdentity(result) {
+      if (!result.identity) {
+        document.getElementById("identityResult").innerHTML =
+          "<strong>Method:</strong> " + result.method + "<br>" +
+          "<strong>Status:</strong> <span class=\"bad\">" + result.status + "</span>" +
+          (result.error ? "<br><strong>Error:</strong> " + result.error : "");
+        return;
+      }
+
+      var cls = result.status.indexOf("unsafe") >= 0 ? "warn" : "ok";
+      document.getElementById("identityResult").innerHTML =
+        "<strong>Method:</strong> " + result.method + "<br>" +
+        "<strong>Status:</strong> <span class=\"" + cls + "\">" + result.status + "</span><br>" +
+        "<strong>Name:</strong> " + result.identity.name + "<br>" +
+        "<strong>Email:</strong> " + result.identity.email + "<br>" +
+        "<strong>Tier:</strong> " + result.identity.tier;
+    }
+
+    function runMappingLookup() {
+      var email = document.getElementById("mappingEmail").value.trim().toLowerCase();
+      var user = userMap[email];
+      if (!user) {
+        document.getElementById("mappingResult").innerHTML = "<span class=\"bad\">No mapping found.</span>";
+        return;
+      }
+      detectedIdentity = user;
+      renderIdentity({ method: "custom user mapping", status: "mapped", identity: user });
+      document.getElementById("mappingResult").innerHTML =
+        "Mapped <strong>" + email + "</strong> to tier <strong>" + user.tier + "</strong>.";
+    }
+
+    function allowedDoc(doc, identity) {
+      if (doc.audience === "shared") return true;
+      if (!identity) return false;
+      if (doc.audience === identity.tier) return true;
+      if (doc.audience === "user:" + identity.email) return true;
+      return false;
+    }
+
+    function runRagDemo() {
+      var allowed = docs.filter(function (doc) { return allowedDoc(doc, detectedIdentity); });
+      var blocked = docs.filter(function (doc) { return !allowedDoc(doc, detectedIdentity); });
+      var html = "";
+      html += "<strong>Detected tier:</strong> " + (detectedIdentity ? detectedIdentity.tier : "None") + "<br><br>";
+      html += "<strong>Allowed dummy documents:</strong>";
+      allowed.forEach(function (doc) {
+        html += "<div class=\"doc\"><strong>" + doc.title + "</strong><br>Audience: " + doc.audience + "<br>" + doc.body + "</div>";
+      });
+      html += "<strong>Blocked dummy documents:</strong>";
+      blocked.forEach(function (doc) {
+        html += "<div class=\"doc\"><strong>" + doc.title + "</strong><br>Audience: " + doc.audience + "</div>";
+      });
+      document.getElementById("ragResult").innerHTML = html;
+    }
+
+    window.addEventListener("DOMContentLoaded", async function () {
+      renderRequestFacts();
+      renderIdentity(await detectIdentity());
     });
   </script>
 </body>
