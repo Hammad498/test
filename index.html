@@ -3,25 +3,10 @@
 <head>
   <title>Stage 2 AI Coach Test</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 24px;
-      background: #f7f7f7;
-    }
-    .box {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 600px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-    button {
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: none;
-      background: #111827;
-      color: white;
-    }
+    body { font-family: Arial, sans-serif; padding: 24px; background: #f7f7f7; }
+    .box { background: white; border-radius: 12px; padding: 20px; max-width: 650px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    button { padding: 10px 14px; border-radius: 8px; border: none; background: #111827; color: white; }
+    code { word-break: break-all; }
   </style>
 </head>
 <body>
@@ -31,8 +16,13 @@
 
     <p><strong>Embed status:</strong> <span id="embedStatus"></span></p>
     <p><strong>Referrer:</strong> <span id="referrer"></span></p>
-    <p><strong>URL params:</strong> <span id="params"></span></p>
-    <p><strong>User identity received:</strong> <span id="identity">None detected</span></p>
+    <p><strong>Raw URL params:</strong> <code id="params"></code></p>
+
+    <p><strong>Name:</strong> <span id="name">None</span></p>
+    <p><strong>Email:</strong> <span id="email">None</span></p>
+    <p><strong>Tier:</strong> <span id="tier">None</span></p>
+    <p><strong>Signed token:</strong> <code id="token">None</code></p>
+    <p><strong>Magic token:</strong> <code id="magic">None</code></p>
 
     <button onclick="alert('Hello from future custom RAG bot')">
       Test Chat Button
@@ -40,6 +30,8 @@
   </div>
 
   <script>
+    const params = new URLSearchParams(window.location.search);
+
     document.getElementById("embedStatus").innerText =
       window.self !== window.top ? "Running inside iframe" : "Opened directly";
 
@@ -48,6 +40,21 @@
 
     document.getElementById("params").innerText =
       window.location.search || "No URL params";
+
+    document.getElementById("name").innerText =
+      params.get("name") || "None";
+
+    document.getElementById("email").innerText =
+      params.get("email") || "None";
+
+    document.getElementById("tier").innerText =
+      params.get("tier") || "None";
+
+    document.getElementById("token").innerText =
+      params.get("token") || "None";
+
+    document.getElementById("magic").innerText =
+      params.get("magic_token") || "None";
   </script>
 </body>
 </html>
