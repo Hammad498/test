@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Stage 2 AI Coach Test</title>
+  <title>AI Coach Test</title>
   <style>
     :root {
       --primary: #111827;
@@ -45,24 +45,54 @@
       font-size: 0.8rem;
       margin: 16px 0;
     }
-    .telemetry-item { margin-bottom: 6px; }
     .auth-zone { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
     .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
     label { font-size: 0.85rem; font-weight: 600; }
-    input[type="email"] { padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 1rem; width: 100%; }
-    button { padding: 12px 16px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: 600; font-size: 0.95rem; cursor: pointer; width: 100%; }
-    .identity-card { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 16px; display: none; }
-    .loading-spinner { display: none; text-align: center; color: var(--muted); margin: 10px 0; font-size: 0.85rem; }
+    input[type="email"] { 
+      padding: 12px; 
+      border-radius: 8px; 
+      border: 1px solid var(--border); 
+      font-size: 1rem; 
+      width: 100%; 
+    }
+    button { 
+      padding: 12px 16px; 
+      border-radius: 8px; 
+      border: none; 
+      background: var(--primary); 
+      color: white; 
+      font-weight: 600; 
+      font-size: 0.95rem; 
+      cursor: pointer; 
+      width: 100%; 
+    }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+    .identity-card { 
+      background: #ecfdf5; 
+      border: 1px solid #a7f3d0; 
+      color: #065f46; 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-size: 0.9rem; 
+      margin: 16px 0; 
+      display: none; 
+    }
+    .loading-spinner { 
+      display: none; 
+      text-align: center; 
+      color: var(--muted); 
+      margin: 10px 0; 
+      font-size: 0.85rem; 
+    }
   </style>
 </head>
 <body>
-
   <div class="box">
     <h2>AI Coach Test Widget</h2>
-    <p>This chatbot shell handles Circle user validation outside the app window framework seamlessly.</p>
+    <p>This chatbot shell handles Circle user validation.</p>
 
-    
-      ✓ Connected User: None</span>
+    <div class="identity-card" id="identityCard">
+      ✓ Connected User: <strong id="identityName">None</strong>
     </div>
 
     <div class="telemetry">
@@ -70,35 +100,39 @@
       <div class="telemetry-item"><strong>Referrer:</strong> <span id="referrer">Detecting...</span></div>
     </div>
 
-    <!-- Active Authorization Window -->
+    <!-- Auth Zone -->
     <div class="auth-zone" id="authZone">
       <div class="input-group">
-        <label for="userEmail">Enter your Circle Community Email to sync your RAG Profile:</label>
+        <label for="userEmail">Enter your Circle Community Email:</label>
         <input type="email" id="userEmail" placeholder="you@domain.com" required>
       </div>
-      <div id="loading" class="loading-spinner">Querying Circle secure directories...</div>
-      Verify Identity & Start</button>
+      <div id="loading" class="loading-spinner">Querying Circle directories...</div>
+      <button id="verifyBtn" onclick="handleIdentityVerification()">Verify Identity & Start</button>
     </div>
 
-    <!-- Active Connected Chatbot View -->
+    <!-- Chat Zone -->
     <div class="auth-zone" id="chatZone" style="display:none;">
-      <p style="color: green; font-weight: bold;">RAG Engine Connected and Ready.</p>
+      <p style="color: green; font-weight: bold;">✅ RAG Engine Connected and Ready.</p>
       <button onclick="alert('RAG Bot session confirmed. User history mapping validated successfully!')">
         Interact with Custom RAG Bot
       </button>
-      <p style="text-align: center; margin-top: 12px; margin-bottom: 0;">
-        Reset Verification Profile</a>
+      <p style="text-align: center; margin-top: 12px;">
+        <a href="#" onclick="logoutIdentity(); return false;" style="color: #6b7280;">Reset Verification Profile</a>
       </p>
     </div>
   </div>
 
   <script>
+    // Telemetry
     document.getElementById("embedStatus").innerText = window.self !== window.top ? "Running inside iframe" : "Opened directly";
-    document.getElementById("referrer").innerText = document.referrer || "No native referrer header passed";
+    document.getElementById("referrer").innerText = document.referrer || "No referrer";
 
+    // Load saved session
     window.addEventListener('DOMContentLoaded', () => {
       const savedUser = localStorage.getItem('circle_user_identity');
-      if (savedUser) { showAuthenticatedState(savedUser); }
+      if (savedUser) {
+        showAuthenticatedState(savedUser);
+      }
     });
 
     function handleIdentityVerification() {
@@ -107,40 +141,39 @@
       const loading = document.getElementById("loading");
 
       if (!email || !email.includes('@')) {
-        alert("Please provide a valid email format.");
+        alert("Please enter a valid email address.");
         return;
       }
 
-      verifyBtn.style.display = "none";
+      verifyBtn.disabled = true;
       loading.style.display = "block";
-      
-      // Hits your live Vercel Backend Serverless route
+
       fetch(`/api/verify-member?email=${encodeURIComponent(email)}`)
         .then(res => res.json())
         .then(data => {
-          verifyBtn.style.display = "block";
+          verifyBtn.disabled = false;
           loading.style.display = "none";
 
           if (data.verified) {
             localStorage.setItem('circle_user_identity', data.name);
             showAuthenticatedState(data.name);
           } else {
-            alert("Verification failed: " + (data.error || "Email not registered in community."));
+            alert("Verification failed: " + (data.error || "Email not found."));
           }
         })
         .catch(err => {
-          verifyBtn.style.display = "block";
+          console.error(err);
+          verifyBtn.disabled = false;
           loading.style.display = "none";
-          alert("Error contacting the validation gateway endpoint.");
+          alert("Error contacting verification service.");
         });
     }
 
     function showAuthenticatedState(nameValue) {
       document.getElementById("authZone").style.display = "none";
       document.getElementById("chatZone").style.display = "block";
-      const identityCard = document.getElementById("identityCard");
+      document.getElementById("identityCard").style.display = "block";
       document.getElementById("identityName").innerText = nameValue;
-      identityCard.style.display = "block";
     }
 
     function logoutIdentity() {
