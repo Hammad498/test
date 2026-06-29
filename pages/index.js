@@ -1,104 +1,87 @@
-﻿import { useEffect, useMemo, useState } from "react";
-
-const demoUsers = [
-  { email: "hammadabrar498@gmail.com", name: "Hammad Abrar", tier: "10K" },
-  { email: "test30k@example.com", name: "Test 30K User", tier: "30K" },
-  { email: "alum@example.com", name: "Test Alum User", tier: "Alum" }
-];
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [embedInfo, setEmbedInfo] = useState({ embed: "checking", referrer: "" });
-  const [selectedEmail, setSelectedEmail] = useState(demoUsers[0].email);
+  const [email, setEmail] = useState("hammadabrar498@gmail.com");
   const [token, setToken] = useState("");
-  const [magicToken, setMagicToken] = useState("");
   const [session, setSession] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [question, setQuestion] = useState("What session links and recordings can I access?");
-
-  const currentUser = useMemo(
-    () => demoUsers.find((user) => user.email === selectedEmail) || demoUsers[0],
-    [selectedEmail]
-  );
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setEmbedInfo({
-      embed: window.self !== window.top ? "Inside iframe" : "Direct / app web view",
+      embed: window.self !== window.top ? "Inside Circle iframe" : "Direct / mobile web view",
       referrer: document.referrer || "No referrer"
     });
 
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get("token");
-    const urlMagic = params.get("magic_token");
     if (urlToken) {
       setToken(urlToken);
       verifyToken(urlToken);
     }
-    if (urlMagic) {
-      setMagicToken(urlMagic);
-      verifyMagic(urlMagic);
-    }
   }, []);
 
-  async function issueToken() {
+  async function continueWithEmail(event) {
+    event.preventDefault();
+    setError("");
+    setSession(null);
+    setAnswer(null);
+
     const response = await fetch("/api/issue-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: currentUser.email })
+      body: JSON.stringify({ email })
     });
     const data = await response.json();
-    setToken(data.token);
-    setMagicToken("");
-    setSession(null);
-    setAnswer(null);
-    window.history.replaceState({}, "", `/?token=${encodeURIComponent(data.token)}`);
-  }
 
-  async function issueMagic() {
-    const response = await fetch("/api/issue-magic-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: currentUser.email })
-    });
-    const data = await response.json();
-    setMagicToken(data.magicToken);
-    setToken("");
-    setSession(null);
-    setAnswer(null);
-    window.history.replaceState({}, "", `/?magic_token=${encodeURIComponent(data.magicToken)}`);
+    if (!response.ok) {
+      setToken("");
+      setError(data.error || "Email is not mapped to a Circle tier in the backend.");
+      return;
+    }
+
+    setToken(data.token);
+    window.history.replaceState({}, "", `/?token=${encodeURIComponent(data.token)}`);
+    await verifyToken(data.token);
   }
 
   async function verifyToken(value = token) {
+    setError("");
     const response = await fetch("/api/me", {
       headers: { Authorization: `Bearer ${value}` }
     });
-    setSession(await response.json());
-  }
-
-  async function verifyMagic(value = magicToken) {
-    const response = await fetch(`/api/magic-session?magic_token=${encodeURIComponent(value)}`);
-    setSession(await response.json());
+    const data = await response.json();
+    setSession(data);
+    if (!response.ok) setError(data.error || "Token verification failed.");
   }
 
   async function askBot() {
-    const headers = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const body = magicToken ? { question, magicToken } : { question };
+    setError("");
+    setAnswer(null);
+
     const response = await fetch("/api/ask", {
       method: "POST",
-      headers,
-      body: JSON.stringify(body)
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ question })
     });
-    setAnswer(await response.json());
+    const data = await response.json();
+    setAnswer(data);
+    if (!response.ok) setError(data.error || "Ask failed.");
   }
 
   return (
     <main>
       <section className="card hero">
         <p className="eyebrow">Circle Stage 2 Research</p>
-        <h1>AI Coach Backend Handoff Test</h1>
+        <h1>AI Coach Tier-Aware Handoff Test</h1>
         <p>
-          This proves the real production pattern: Circle opens the bot, our backend identifies the
-          user/tier, and RAG retrieval only uses allowed documents.
+          This is the production-style pattern: Circle opens one shared bot, the bot verifies the
+          member email with our backend, and answers are filtered by the member&apos;s mapped tier.
         </p>
         <div className="facts">
           <span>{embedInfo.embed}</span>
@@ -107,31 +90,33 @@ export default function Home() {
       </section>
 
       <section className="card">
-        <h2>1. Pick a Test Client</h2>
-        <label>Email / tier</label>
-        <select value={selectedEmail} onChange={(event) => setSelectedEmail(event.target.value)}>
-          {demoUsers.map((user) => (
-            <option key={user.email} value={user.email}>
-              {user.name} - {user.email} - {user.tier}
-            </option>
-          ))}
-        </select>
-        <div className="actions">
-          <button onClick={issueToken}>Issue signed token</button>
-          <button onClick={issueMagic} className="secondary">Issue magic link token</button>
-        </div>
+        <h2>1. Continue With Email</h2>
+        <p className="small">
+          In production this would be an email OTP, magic link, or SSO login. For this engineering
+          test, the backend maps known emails to tiers and issues a signed session token.
+        </p>
+        <form onSubmit={continueWithEmail}>
+          <label>Circle member email</label>
+          <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="member@example.com"
+            inputMode="email"
+          />
+          <div className="actions">
+            <button type="submit">Continue</button>
+            <button type="button" className="secondary" onClick={() => verifyToken()} disabled={!token}>
+              Re-check session
+            </button>
+          </div>
+        </form>
+        {error ? <div className="error">{error}</div> : null}
       </section>
 
       <section className="card">
-        <h2>2. Verify Identity Handoff</h2>
-        <p className="small">Signed token and magic token are both verified by backend API routes.</p>
-        <pre>{token || magicToken || "No token issued yet."}</pre>
-        <div className="actions">
-          <button onClick={() => token ? verifyToken() : verifyMagic()}>
-            Verify current token
-          </button>
-        </div>
-        <Result data={session} />
+        <h2>2. Verified Backend Identity</h2>
+        <p className="small">The browser does not choose a tier. The backend returns the mapped tier.</p>
+        <Result data={session} empty="No verified session yet." />
       </section>
 
       <section className="card">
@@ -139,25 +124,25 @@ export default function Home() {
         <label>Question</label>
         <input value={question} onChange={(event) => setQuestion(event.target.value)} />
         <div className="actions">
-          <button onClick={askBot}>Ask with verified identity</button>
+          <button onClick={askBot} disabled={!token}>Ask with verified identity</button>
         </div>
-        <Result data={answer} />
+        <Result data={answer} empty="No answer yet." />
       </section>
 
       <section className="card">
-        <h2>What This Proves</h2>
+        <h2>What To Prove In Circle</h2>
         <ul>
-          <li>Plain Circle iframe does not provide member identity automatically.</li>
-          <li>Signed-token handoff works as the best production pattern.</li>
-          <li>Magic-link handoff works as a simpler fallback.</li>
-          <li>Backend can filter RAG docs by shared, tier, and user-specific access.</li>
+          <li>One shared bot link can be placed in Circle for all members.</li>
+          <li>Circle iframe does not pass member identity automatically.</li>
+          <li>Backend email/session verification identifies the user and tier.</li>
+          <li>RAG retrieval is filtered server-side by shared, tier, and user-specific documents.</li>
         </ul>
       </section>
     </main>
   );
 }
 
-function Result({ data }) {
-  if (!data) return <div className="result">No result yet.</div>;
+function Result({ data, empty }) {
+  if (!data) return <div className="result">{empty}</div>;
   return <pre className="result">{JSON.stringify(data, null, 2)}</pre>;
 }
