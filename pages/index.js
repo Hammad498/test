@@ -5,6 +5,7 @@ export default function Home() {
   const [email, setEmail] = useState("hammadabrar498@gmail.com");
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState("");
+  const [otpChallenge, setOtpChallenge] = useState("");
   const [token, setToken] = useState("");
   const [session, setSession] = useState(null);
   const [answer, setAnswer] = useState(null);
@@ -28,6 +29,7 @@ export default function Home() {
     setToken("");
     setCode("");
     setDevCode("");
+    setOtpChallenge("");
 
     const response = await fetch("/api/request-otp", {
       method: "POST",
@@ -43,6 +45,7 @@ export default function Home() {
 
     setStatus(data.message);
     setDevCode(data.devTestCode || "");
+    setOtpChallenge(data.otpChallenge || "");
   }
 
   async function verifyOtp(event) {
@@ -53,7 +56,7 @@ export default function Home() {
     const response = await fetch("/api/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code })
+      body: JSON.stringify({ email, code, otpChallenge })
     });
     const data = await response.json();
 
@@ -65,6 +68,7 @@ export default function Home() {
     }
 
     setToken(data.token);
+    setOtpChallenge("");
     setStatus(data.message);
     await verifyToken(data.token);
   }
@@ -143,7 +147,7 @@ export default function Home() {
             inputMode="numeric"
           />
           <div className="actions">
-            <button type="submit" disabled={!devCode}>Verify and continue</button>
+            <button type="submit" disabled={!devCode || !otpChallenge}>Verify and continue</button>
             <button type="button" className="secondary" onClick={() => verifyToken()} disabled={!token}>
               Re-check session
             </button>

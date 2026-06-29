@@ -1,29 +1,42 @@
-import { otpCodes } from "./_data";
-import { signToken } from "./_tokens";
+import crypto from "crypto";
+import { users } from "./_data";
+import { signToken, verifyToken } from "./_tokens";
+
+const otpSecret = process.env.OTP_SECRET || process.env.TOKEN_SECRET || "local-demo-secret-change-in-production";
+
+function hashCode(email, code) {
+  return crypto.createHmac("sha256", otpSecret).update(`${email}:${code}`).digest("hex");
+}
+
+function safeEqual(leftValue, rightValue) {
+  const left = Buffer.from(String(leftValue || ""));
+  const right = Buffer.from(String(rightValue || ""));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
 
 export default function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
 
   const email = String(req.body.email || "").trim().toLowerCase();
   const code = String(req.body.code || "").trim();
-  const record = otpCodes.get(email);
+  const otpChallenge = String(req.body.otpChallenge || "");
 
-  if (!record) return res.status(404).json({ error: "No active OTP for this email" });
-  if (record.expiresAt < Date.now()) {
-    otpCodes.delete(email);
-    return res.status(401).json({ error: "OTP expired" });
+  let challenge;
+  try {
+    challenge = verifyToken(otpChallenge);
+  } catch (error) {
+    return res.status(401).json({ error: "OTP challenge expired or invalid. Send a new code." });
   }
-  if (record.attempts >= 5) {
-    otpCodes.delete(email);
-    return res.status(429).json({ error: "Too many incorrect attempts" });
-  }
-  if (record.code !== code) {
-    record.attempts += 1;
+
+  if (challenge.purpose !== "otp") return res.status(401).json({ error: "Invalid OTP purpose" });
+  if (challenge.email !== email) return res.status(401).json({ error: "OTP email mismatch" });
+  if (!safeEqual(challenge.codeHash, hashCode(email, code))) {
     return res.status(401).json({ error: "Incorrect OTP" });
   }
 
-  otpCodes.delete(email);
-  const user = record.user;
+  const user = users[email];
+  if (!user) return res.status(404).json({ error: "Email is not mapped to an active Circle member" });
+
   const now = Math.floor(Date.now() / 1000);
   const token = signToken({
     sub: user.id,
