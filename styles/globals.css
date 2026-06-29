@@ -136,3 +136,12 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
+.notice {
+  margin-top: 12px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 700;
+}

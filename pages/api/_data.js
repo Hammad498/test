@@ -1,4 +1,4 @@
-﻿export const users = {
+export const users = {
   "hammadabrar498@gmail.com": {
     id: "user_10k_hammad",
     name: "Hammad Abrar",
@@ -53,3 +53,4 @@ export const docs = [
 ];
 
 export const magicTokens = new Map();
+export const otpCodes = new Map();
